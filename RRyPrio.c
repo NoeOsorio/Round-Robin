@@ -5,6 +5,8 @@
 #include<unistd.h> 
 #include<signal.h>
 
+int isFisrtTime = 1;
+
 struct proceso{
 	int id;
 	int yaPaso;
@@ -34,6 +36,23 @@ void sort(int n){
 	    d = c;
 	 
 	    while ( d > 0 && procA[d-1].bt > procA[d].bt) {
+	      t          = procA[d];
+	      procA[d]   = procA[d-1];
+	      procA[d-1] = t;
+	 
+	      d--;
+	    }
+	}
+	//return procA;
+}
+void sortRR(int n){
+	struct proceso t;
+	//Sort
+	int d;
+	for (int c = 1 ; c < n - 1; c++) {
+	    d = c;
+	 
+	    while ( d > 0 && procA[d-1].id > procA[d].id) {
 	      t          = procA[d];
 	      procA[d]   = procA[d-1];
 	      procA[d-1] = t;
@@ -96,12 +115,14 @@ int getAProcess(int n, struct proceso exception){
 	{
 		if(procA[i].yaPaso == 0 && procA[i].id != 0){
 			isEmpty = 0;
-			printf("Todavia hay algo\n");
+			
 			break;
 		}
 	}
-
+	//printf("isEmpty = %d \n", isEmpty);
 	if(isEmpty == 1){
+
+		system("echo 0 > ft.txt");
 		getPrioridad(n);
 	}
 
@@ -114,7 +135,7 @@ int getAProcess(int n, struct proceso exception){
 		if(((procA[i].id) != 0) && ((procA[i].id) != exception.id) && ((procA[i].id) > 100) && (procA[i].yaPaso == 0)){
 			isEmpty = 0;
 			something = procA[i];
-			printf("Something: %d con prioridad %d \n", something.id, something.prioridad);
+			//printf("Something: %d con prioridad %d \n", something.id, something.prioridad);
 			if(something.prioridad < exception.prioridad ){
 				anterior = something;
 				break;
@@ -139,18 +160,61 @@ int getAProcess(int n, struct proceso exception){
 
 	else if (anterior.prioridad > 0 && anterior.prioridad < something.prioridad){
 		something = anterior;
-		printf("Anterior: %d con prioridad %d \n", something.id, something.prioridad);
+		//printf("Anterior: %d con prioridad %d \n", something.id, something.prioridad);
 	}
 	else if (something.prioridad > exception.prioridad)	{
 		something = sig;
-		printf("Siguiente: %d con prioridad %d \n", something.id, something.prioridad);
+		//printf("Siguiente: %d con prioridad %d \n", something.id, something.prioridad);
 	}
 	else if (isEmpty == 1){
 		something = same;
-		printf("El mismo: %d con prioridad %d \n", something.id, something.prioridad);
+		//printf("El mismo: %d con prioridad %d \n", something.id, something.prioridad);
+		for (int i = 0; i < n; i++){
+			if ((procA[i].id) == exception.id){
+				//Encuentra el mismo
+				same = exception;
+			}
+			if(((procA[i].id) != 0) && ((procA[i].id) != exception.id) && ((procA[i].id) > 100) && (procA[i].yaPaso == 0)){
+				isEmpty = 0;
+				something = procA[i];
+				//printf("Something: %d con prioridad %d \n", something.id, something.prioridad);
+				if(something.prioridad < exception.prioridad ){
+					anterior = something;
+					break;
+				}
+				else if (something.prioridad > exception.prioridad && band == 0){
+					isEmpty = 0;
+					sig = something;
+					band = 1;
+				}
+				
+			}
+		}
+		if (something.prioridad >= n){
+			for (int i = 0; i < n; ++i)
+			{
+			 	if(procA[i].bt > 0){
+			 		something = procA[i];
+			 		break;
+			 	}
+			} 
+		}
+
+		else if (anterior.prioridad > 0 && anterior.prioridad < something.prioridad){
+			something = anterior;
+			//printf("Anterior: %d con prioridad %d \n", something.id, something.prioridad);
+		}
+		else if (something.prioridad > exception.prioridad)	{
+			something = sig;
+			//printf("Siguiente: %d con prioridad %d \n", something.id, something.prioridad);
+		}
+		else if (isEmpty == 1){
+			something = same;
+			//printf("El mismo: %d con prioridad %d \n", something.id, something.prioridad);
+		}
 	}
 
-	printf("Next: %d \n", something.id);
+	//printf("Next: %d \n", something.id);
 	return something.id;	
 }
 struct proceso updateSelf(int n, struct proceso self){
@@ -189,8 +253,10 @@ struct proceso updateYaPaso(int n, struct proceso self){
 	return self;
 }
 void setPrioridad(int n){
-
-	sort(n);
+	if(isFisrtTime == 0)
+		sort(n);
+	else
+		sortRR(n);
 
 
 	int prio = 1, band = 0;
@@ -238,6 +304,26 @@ void deleteProcess(int n, int delete){
 
 	}
 }
+int getFT(){
+	int ft;
+	int buf; FILE *fp;
+	if((fp=fopen("ft.txt","r"))==NULL){
+		printf("error al abri el archivo");
+		exit(0);
+	}
+	else {
+		//printf("buscando archivo \n");
+		while(!feof(fp)){
+			fscanf(fp,"%d",&buf);
+			ft = buf;
+			break;			
+		}
+			
+		fclose(fp);
+	}
+	return ft;
+}
+
 void RR(int qt, int n) 
 { 
 	
@@ -252,7 +338,7 @@ void RR(int qt, int n)
 
 	//Asigna de forma aleatoria los BurstTime
 	for (j = 0; j<n ; j++){
-		bt[j] = rand()%10+1;
+		bt[j] = rand()%20+1;
 		Prio[j] = rand()%5+1;
 	}
 
@@ -307,6 +393,7 @@ void RR(int qt, int n)
 		getPrioridad(n);
 		self = updateSelf(n,self);
 		while(self.bt >= 0){
+				isFisrtTime = getFT();
 				//Comunicacion entre procesos
 				getPrioridad(n);
 				self = updateBT(n, self);
@@ -371,7 +458,7 @@ int main()
 	system("clear");
 	system("rm procesos.txt");
 	//system("rm prioridad.txt");
-
+	system("echo 1 > ft.txt");
 	//Lee el quantum
 	qt = readQT();
 
