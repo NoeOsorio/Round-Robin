@@ -12,7 +12,8 @@ struct proceso{
 	int bt;
 }procA[10], *p;
 
-
+//Declaracion de funciones
+void getPrioridad(int n);
 
 int readQT(){
 	int qt;
@@ -27,7 +28,7 @@ int process_fork(int nproc) {
 	return(0);
 }
 
-struct proceso * sort(int n, struct proceso procA[]){
+void sort(int n){
 	struct proceso t;
 	//Sort
 	int d;
@@ -42,7 +43,7 @@ struct proceso * sort(int n, struct proceso procA[]){
 	      d--;
 	    }
 	}
-	return procA;
+	//return procA;
 }
 
 void setProcesos(int n){
@@ -90,21 +91,35 @@ void getProcesos(int n){
 
 int getAProcess(int n, struct proceso exception){
 	struct proceso something, anterior, sig, same;
-	int band = 0, isEmpty = 0;
+	int band = 0, isEmpty = 1;
 
 	something.id = 0;
 	something.prioridad = 0;
 	something.bt = 0;
 
+	for (int i = 0; i < n; ++i)
+	{
+		if(procA[i].yaPaso == 0 && procA[i].id != 0){
+			isEmpty = 0;
+			printf("Todavia hay algo\n");
+			break;
+		}
+	}
+
+	if(isEmpty == 1){
+		getPrioridad(n);
+	}
+
 
 	for (int i = 0; i < n; i++){
 		if ((procA[i].id) == exception.id){
+			//Encuentra
 			same = exception;
 		}
 		if(((procA[i].id) != 0) && ((procA[i].id) != exception.id) && ((procA[i].id) > 100) && (procA[i].yaPaso == 0)){
 			isEmpty = 0;
 			something = procA[i];
-			//printf("Something: %d con prioridad %d \n", something.id, something.prioridad);
+			printf("Something: %d con prioridad %d \n", something.id, something.prioridad);
 			if(something.prioridad < exception.prioridad ){
 				anterior = something;
 				break;
@@ -129,18 +144,18 @@ int getAProcess(int n, struct proceso exception){
 
 	else if (anterior.prioridad > 0 && anterior.prioridad < something.prioridad){
 		something = anterior;
-		//printf("Anterior: %d con prioridad %d \n", something.id, something.prioridad);
+		printf("Anterior: %d con prioridad %d \n", something.id, something.prioridad);
 	}
 	else if (something.prioridad > exception.prioridad)	{
 		something = sig;
-		//printf("Siguiente: %d con prioridad %d \n", something.id, something.prioridad);
+		printf("Siguiente: %d con prioridad %d \n", something.id, something.prioridad);
 	}
 	else if (isEmpty == 1){
 		something = same;
-		//printf("El mismo: %d con prioridad %d \n", something.id, something.prioridad);
+		printf("El mismo: %d con prioridad %d \n", something.id, something.prioridad);
 	}
 
-	//printf("Next: %d \n", something.id);
+	printf("Next: %d \n", something.id);
 	return something.id;
 	
 }
@@ -181,15 +196,9 @@ struct proceso updateYaPaso(int n, struct proceso self){
 }
 
 void setPrioridad(int n){
-	struct proceso *p;
 
-	p = sort(n, procA);
+	sort(n);
 
-	for (int i = 0; i < n; ++i)
-	{
-		procA[i] = *p;
-		p++;
-	}
 
 	int prio = 1, band = 0;
 	for (int i = 0; i < n-1; ++i)
@@ -322,8 +331,8 @@ void RR(int qt, int n)
 						//printf("Proceso %d se despierta\n", turn);
 						kill(turn, SIGCONT);
 						//printf("Proceso %d se va a dormir\n", getpid());
-
-						kill(getpid(), SIGSTOP);
+						if(turn != self.id)
+							kill(getpid(), SIGSTOP);
 				}
 			}
 			else{
