@@ -10,7 +10,7 @@ struct proceso{
 	int yaPaso;
 	int prioridad;
 	int bt;
-}proc[10], *p;
+}procA[10], *p;
 
 
 
@@ -27,58 +27,36 @@ int process_fork(int nproc) {
 	return(0);
 }
 
-void sort(int n, struct proceso *p){
-	struct proceso array[10], *tmp = p, t;
-	for (int i = 0; i < n-1; ++i)
-	{
-		array[i] = *p;
-		p++;	
-	}
-	p = tmp;
-
-
+struct proceso * sort(int n, struct proceso procA[]){
+	struct proceso t;
 	//Sort
 	int d;
-
-	
 	for (int c = 1 ; c < n - 1; c++) {
-    d = c;
- 
-    while ( d > 0 && array[d-1].bt > array[d].bt) {
-      t          = array[d];
-      array[d]   = array[d-1];
-      array[d-1] = t;
- 
-      d--;
-    }
-
-    //Pointer
-
-    for (int i = 0; i < n-1; ++i)
-	{
-		*p = array[i];
-		p++;	
+	    d = c;
+	 
+	    while ( d > 0 && procA[d-1].bt > procA[d].bt) {
+	      t          = procA[d];
+	      procA[d]   = procA[d-1];
+	      procA[d-1] = t;
+	 
+	      d--;
+	    }
 	}
-	p = tmp;
-  }
+	return procA;
 }
 
-void setProcesos(int n, struct proceso *procesos){
-	struct proceso *tmp = procesos;
+void setProcesos(int n){
 	char command[50];
 	system("rm procesos.txt");
 	for (int i = 0; i < n-1; ++i)
 	{
-		sprintf(command, "echo %d %d %d %d >> procesos.txt", (procesos->prioridad) , (procesos->id), (procesos->bt), (procesos->yaPaso));
+		sprintf(command, "echo %d %d %d %d >> procesos.txt", (procA[i].prioridad) , (procA[i].id), (procA[i].bt), (procA[i].yaPaso));
 		system(command);
-		procesos++;
 	}
-	procesos = tmp;
 }
 
-void getProcesos(int n, struct proceso *p){
-	struct proceso *tmp = p;
-	int cont = 0;
+void getProcesos(int n){
+	int cont = 0, i = 0;
 	int buf; FILE *fp;
 	if((fp=fopen("procesos.txt","r"))==NULL){
 		printf("error al abri el archivo");
@@ -89,30 +67,28 @@ void getProcesos(int n, struct proceso *p){
 		//printf("buscando archivo \n");
 		while(!feof(fp)){
 			fscanf(fp,"%d",&buf);
-				(p->prioridad) = buf;
-				//printf("%d\n", p->id);
+				(procA[i].prioridad) = buf;
+				//printf("%d\n", procA[i].id);
 			fscanf(fp,"%d",&buf);
-				(p->id) = buf;
-				//printf("%d\n", p->prioridad);
+				(procA[i].id) = buf;
+				//printf("%d\n", procA[i].prioridad);
 			fscanf(fp,"%d",&buf);
-				(p->bt) = buf;
+				(procA[i].bt) = buf;
 			fscanf(fp,"%d",&buf);
-				(p->yaPaso) = buf;	
-				//printf("%d\n", p->id);	
-				p++;
+				(procA[i].yaPaso) = buf;	
+				//printf("%d\n", procA[i].id);	
+			i++;
 			cont++;	
 			if (cont >= n)
 				break;			
-			}
+		}
 			
 		fclose(fp);
 	}
-	p = tmp;
 	return;
 }
 
-int getAProcess(int n, struct proceso *procesos, struct proceso exception){
-	struct proceso *tmp = procesos;
+int getAProcess(int n, struct proceso exception){
 	struct proceso something, anterior, sig, same;
 	int band = 0, isEmpty = 0;
 
@@ -122,12 +98,12 @@ int getAProcess(int n, struct proceso *procesos, struct proceso exception){
 
 
 	for (int i = 0; i < n; i++){
-		if ((procesos->id) == exception.id){
+		if ((procA[i].id) == exception.id){
 			same = exception;
 		}
-		if(((procesos->id) != 0) && ((procesos->id) != exception.id) && ((procesos->id) > 100) && (procesos->yaPaso == 0)){
+		if(((procA[i].id) != 0) && ((procA[i].id) != exception.id) && ((procA[i].id) > 100) && (procA[i].yaPaso == 0)){
 			isEmpty = 0;
-			something = *procesos;
+			something = procA[i];
 			//printf("Something: %d con prioridad %d \n", something.id, something.prioridad);
 			if(something.prioridad < exception.prioridad ){
 				anterior = something;
@@ -136,22 +112,18 @@ int getAProcess(int n, struct proceso *procesos, struct proceso exception){
 			else if (something.prioridad > exception.prioridad && band == 0){
 				isEmpty = 0;
 				sig = something;
-				procesos = tmp;
 				band = 1;
 			}
 			
 		}
-		procesos++;
 	}
 	if (something.prioridad >= n){
-		procesos = tmp;
 		for (int i = 0; i < n; ++i)
 		 {
-		 	if(procesos->bt > 0){
-		 		something = *procesos;
+		 	if(procA[i].bt > 0){
+		 		something = procA[i];
 		 		break;
 		 	}
-		 	procesos++;
 		 } 
 	}
 
@@ -168,129 +140,103 @@ int getAProcess(int n, struct proceso *procesos, struct proceso exception){
 		//printf("El mismo: %d con prioridad %d \n", something.id, something.prioridad);
 	}
 
-
-	procesos = tmp;
 	//printf("Next: %d \n", something.id);
 	return something.id;
 	
 }
-struct proceso updateSelf(int n, struct proceso *p, struct proceso self){
-	struct proceso *tmp = p;
+struct proceso updateSelf(int n, struct proceso self){
 
 	for (int i = 0; i < n-1; ++i)
 	{
-		if(p->id == self.id){
-			self = *p;
+		if(procA[i].id == self.id){
+			self = procA[i];
 			break;
 		}
-		p++;
 	}
-	p = tmp;
 	return self;
 }
-struct proceso updateBT(int n, struct proceso *p, struct proceso self){
-	struct proceso *tmp = p;
-
+struct proceso updateBT(int n, struct proceso self){
 	for (int i = 0; i < n-1; ++i)
 	{
-		if(p->id == self.id){
-			p->bt = self.bt;
-			self = *p;
+		if(procA[i].id == self.id){
+			procA[i].bt = self.bt;
+			self = procA[i];
 			break;
 		}
-		p++;
+		
 	}
-	p = tmp;
 	return self;
 }
-struct proceso updateYaPaso(int n, struct proceso *p, struct proceso self){
-	struct proceso *tmp = p;
+struct proceso updateYaPaso(int n, struct proceso self){
 
 	for (int i = 0; i < n-1; ++i)
 	{
-		if(p->id == self.id){
-			p->yaPaso = self.yaPaso;
-			self = *p;
+		if(procA[i].id == self.id){
+			procA[i].yaPaso = self.yaPaso;
+			self = procA[i];
 			break;
 		}
-		p++;
 	}
-	p = tmp;
 	return self;
 }
 
-void setPrioridad(int n, struct proceso *p){
-	/*char command[50];
-	struct proceso *tmp = procesos;
-	system("rm prioridad.txt");
-	for (int i = 0; i < n-1; ++i)
-	{
-		sprintf(command, "echo %d %d >> prioridad.txt", (procesos->bt) , (procesos->id));
-		system(command);
-		procesos++;
-	}
-	system("sort prioridad.txt -o prioridad.txt");
-	procesos = tmp;*/
+void setPrioridad(int n){
+	struct proceso *p;
 
-	sort(n,p);
-	struct proceso array[10], *tmp = p;
+	p = sort(n, procA);
+
+	for (int i = 0; i < n; ++i)
+	{
+		procA[i] = *p;
+		p++;
+	}
+
 	int prio = 1, band = 0;
 	for (int i = 0; i < n-1; ++i)
 	{
-		if (p->yaPaso == 1){
+		if (procA[i].yaPaso == 1){
 			prio++;
 		}
-		if (p->bt != 0 && p->yaPaso == 0){
+		if (procA[i].bt != 0 && procA[i].yaPaso == 0){
 			band = 1;
-			p->prioridad = prio;
+			procA[i].prioridad = prio;
 			prio++;
 		}
-		p++;	
 	}
 	//printf("Prioridad maxima %d, %d\n", prio, band);
-	p = tmp;
 
 	if (band == 0){
 			for (int i = 0; i < n-1; ++i)
 			{
-				p->yaPaso = 0;
-				p++;	
+				procA[i].yaPaso = 0;
 			}
-		p = tmp;
 	}
 }
-void getPrioridad(int n, struct proceso *p){
-	struct proceso *tmp = p;
-
-	getProcesos(n,p);
-	setPrioridad(n,p);
-	setProcesos(n,p);
-	
-	p = tmp;
+void getPrioridad(int n){
+	getProcesos(n);
+	setPrioridad(n);
+	setProcesos(n);
 	//setProcesos(n, p);
 	return;
 }
-void deleteProcess(int n, struct proceso *procesos, int delete){
-	struct proceso *tmp = procesos;
+void deleteProcess(int n, int delete){
 	char command[50];
 	system("rm procesos.txt");
 	for (int i = 0; i < n-1; ++i)
 	{
-		if ((procesos->id) == delete){
-			(procesos->prioridad) = 0;
-			(procesos->id) = 0;
-			(procesos->bt) = 0;
+		if ((procA[i].id) == delete){
+			(procA[i].prioridad) = 0;
+			(procA[i].id) = 0;
+			(procA[i].bt) = 0;
 
 			//printf("Se elimino proceso %d\n\n", *procesos);
 		}
-		sprintf(command, "echo %d %d %d %d >> procesos.txt", (procesos->prioridad) , (procesos->id), (procesos->bt), (procesos->yaPaso));
+		sprintf(command, "echo %d %d %d %d >> procesos.txt", (procA[i].prioridad) , (procA[i].id), (procA[i].bt), (procA[i].yaPaso));
 		system(command);
 
-		procesos++;
 	}
-	procesos = tmp;
 }
-void RR(int qt, int n, struct proceso *proc) 
+void RR(int qt, int n) 
 { 
 	
 	char command[50];
@@ -356,23 +302,23 @@ void RR(int qt, int n, struct proceso *proc)
 	//Hijos
 	else{
 		//printf("Soy Proceso %d PID: %d\n",pid, getpid() );
-		getPrioridad(n,proc);
-		self = updateSelf(n, proc, self);
+		getPrioridad(n);
+		self = updateSelf(n,self);
 		while(self.bt >= 0){
 				//Comunicacion entre procesos
-				getPrioridad(n,proc);
-				self = updateBT(n, proc, self);
+				getPrioridad(n);
+				self = updateBT(n, self);
 				self.yaPaso = 1;
-				self = updateYaPaso(n, proc, self);
-				setProcesos(n, p);
+				self = updateYaPaso(n, self);
+				setProcesos(n);
 				printf("\nProceso %d burstTime: %d prioridad: %d\n", pid, self.bt, self.prioridad);
 			if (self.bt > qt){
 				self.bt -= qt;
 				//Simula el proceso
 				sleep(qt);
 
-				if ((turn = getAProcess(n,proc,self)) != 0){
-						getPrioridad(n,proc);
+				if ((turn = getAProcess(n, self)) != 0){
+						getPrioridad(n);
 						//printf("Proceso %d se despierta\n", turn);
 						kill(turn, SIGCONT);
 						//printf("Proceso %d se va a dormir\n", getpid());
@@ -386,17 +332,17 @@ void RR(int qt, int n, struct proceso *proc)
 				//printf("Proceso %d burstTime: %d\n", pid, burstTime);
 				printf("Proceso %d terminado\n", pid);
 				
-				if ((turn = getAProcess(n,proc,self)) != 0){
+				if ((turn = getAProcess(n, self)) != 0){
 						//printf("Proceso %d se despierta\n", turn);
-						deleteProcess(n, proc, getpid());
-						getPrioridad(n,proc);
+						deleteProcess(n, getpid());
+						getPrioridad(n);
 						//setProcesos(n, p);
 						kill(turn, SIGCONT);
 						
 				}
 				else{
-					deleteProcess(n, proc, getpid());
-					setProcesos(n, p);
+					deleteProcess(n, getpid());
+					setProcesos(n);
 				}
 
 				exit(0);
@@ -417,7 +363,7 @@ int main()
 	srand((unsigned) time(&t));
 
 	//Aqui se van a guardar los id de procesos que se encuentran en procesos.txt
-	p = proc;
+	p = procA;
 
 	//Limpia el archivo
 	system("clear");
@@ -428,7 +374,7 @@ int main()
 	qt = readQT();
 
 	//Magia
-	RR(qt, 6, p); 
+	RR(qt, 6); 
 
 	return 0; 
 } 
